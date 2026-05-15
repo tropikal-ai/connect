@@ -2,7 +2,7 @@
 
 Framework-agnostic protocol primitives for platform packages that implement TROPIKAL Connect.
 
-This package contains OAuth PKCE helpers, signed request verification, resource schema rules, and browser payload safety checks. It does not contain Laravel, Filament, WordPress, Shopify, storage, routes, controllers, views, or private server behavior.
+This package contains OAuth PKCE helpers, signed request verification, resource and capability schema rules, and browser payload safety checks. It does not contain Laravel, Filament, WordPress, Shopify, storage, routes, controllers, views, or private server behavior.
 
 ## Install
 
@@ -17,6 +17,7 @@ composer require tropikal-ai/connect
 - Signed requests cover method, path, normalized query, timestamp, nonce, installation id, and body hash.
 - Replay protection is provided by a host-owned atomic `NonceStore`.
 - Resource reads and writes use explicitly declared fields only.
+- Capabilities are source-neutral descriptors that can be used by chat, workflows, or other runtimes without exposing implementation credentials.
 - Browser/public payloads reject secret-shaped keys.
 
 ## Example

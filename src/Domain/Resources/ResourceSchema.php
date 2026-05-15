@@ -17,6 +17,8 @@ final readonly class ResourceSchema
             foreach (array_keys($resource['fields'] ?? []) as $field) {
                 SensitiveData::assertPublicKey((string) $field);
             }
+            SensitiveData::assertPublicPayload($resource['fields'] ?? []);
+            SensitiveData::assertPublicPayload($resource['actions'] ?? []);
         }
     }
 

@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace TropikalAI\Connect\Tests;
 
 use PHPUnit\Framework\TestCase;
+use TropikalAI\Connect\Domain\Capabilities\CapabilityDescriptor;
+use TropikalAI\Connect\Domain\Capabilities\CapabilitySet;
+use TropikalAI\Connect\Domain\Capabilities\FieldDescriptor;
+use TropikalAI\Connect\Domain\Capabilities\OperationDescriptor;
 use TropikalAI\Connect\Domain\Resources\ResourceSchema;
 use TropikalAI\Connect\Domain\Security\SensitiveData;
 
@@ -62,5 +66,56 @@ final class ResourceSchemaTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         SensitiveData::assertPublicPayload(['nested' => ['refresh_token' => 'secret']]);
+    }
+
+    public function test_capability_descriptor_rejects_secret_shaped_fields(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new CapabilityDescriptor(
+            sourceKind: 'connect_filament',
+            resourceKey: 'posts',
+            resourceLabel: 'Posts',
+            fields: [
+                'api_token' => new FieldDescriptor('api_token'),
+            ],
+        );
+    }
+
+    public function test_capability_payload_is_public_and_operation_based(): void
+    {
+        $set = new CapabilitySet([
+            new CapabilityDescriptor(
+                sourceKind: 'connect_filament',
+                resourceKey: 'posts',
+                resourceLabel: 'Posts',
+                fields: [
+                    'title' => new FieldDescriptor('title', writable: true, required: true),
+                ],
+                operations: [
+                    new OperationDescriptor(
+                        name: 'posts.list',
+                        operation: 'list',
+                        riskLevel: 'read',
+                        outputSchema: ['type' => 'object'],
+                    ),
+                    new OperationDescriptor(
+                        name: 'posts.create',
+                        operation: 'create',
+                        riskLevel: 'write',
+                        inputSchema: ['type' => 'object'],
+                        requiresConfirmation: true,
+                    ),
+                ],
+                grants: ['read', 'write'],
+            ),
+        ]);
+
+        $payload = $set->publicPayload();
+
+        $this->assertSame('connect_filament', $payload[0]['source_kind']);
+        $this->assertSame(['read', 'write'], $payload[0]['grants']);
+        $this->assertSame('posts.create', $payload[0]['operations'][1]['name']);
+        SensitiveData::assertPublicPayload($payload);
     }
 }

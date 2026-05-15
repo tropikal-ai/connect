@@ -14,7 +14,6 @@ final class SensitiveData
         'client_secret',
         'credential',
         'hmac',
-        'key',
         'password',
         'private',
         'refresh',
@@ -34,12 +33,14 @@ final class SensitiveData
 
     public static function assertPublicKey(string $key): void
     {
-        $normalized = strtolower($key);
-        foreach (self::KEY_MARKERS as $marker) {
-            if (str_contains($normalized, $marker)) {
-                throw new \InvalidArgumentException("Public payload contains a server-only key: {$key}");
-            }
+        if (! self::isPublicKey($key)) {
+            throw new \InvalidArgumentException("Public payload contains a server-only key: {$key}");
         }
+    }
+
+    public static function isPublicKey(string $key): bool
+    {
+        return ! self::isSensitiveKey($key);
     }
 
     public static function redact(mixed $value): mixed
@@ -57,9 +58,13 @@ final class SensitiveData
         return $redacted;
     }
 
-    private static function isSensitiveKey(string $key): bool
+    public static function isSensitiveKey(string $key): bool
     {
         $normalized = strtolower($key);
+        if ($normalized === 'key' || str_ends_with($normalized, '_key')) {
+            return ! in_array($normalized, ['resource_key'], true);
+        }
+
         foreach (self::KEY_MARKERS as $marker) {
             if (str_contains($normalized, $marker)) {
                 return true;

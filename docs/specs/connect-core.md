@@ -25,11 +25,12 @@ Platform packages need one small, reviewed implementation of the connection prot
 - OAuth state: one-time browser transaction state stored by hash with expiry.
 - Signed request: canonical method, path, normalized query, timestamp, nonce, body hash, and installation id.
 - Resource schema: explicit fields, grants, and named actions.
+- Capability schema: source-neutral business operations derived from explicit resource grants.
 - Public payload: browser-safe data with no secret-shaped keys.
 
 ## Public Contracts
 
-The package exposes immutable value objects, request builders, a signed request verifier, a nonce-store port, resource schema rules, and payload safety guards.
+The package exposes immutable value objects, request builders, a signed request verifier, a nonce-store port, resource schema rules, capability descriptors, and payload safety guards.
 
 ## Security Model
 
@@ -41,4 +42,4 @@ Framework packages provide storage, HTTP clients, encrypted persistence, caches,
 
 ## Test Plan
 
-Unit tests cover OAuth helpers, token payloads, request signing, replay rejection, resource projection, write validation, named action grants, payload safety, and framework-free boundaries.
+Unit tests cover OAuth helpers, token payloads, request signing, replay rejection, capability descriptors, resource projection, write validation, named action grants, payload safety, and framework-free boundaries.
