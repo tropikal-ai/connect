@@ -39,6 +39,7 @@ final class OAuthProtocolTest extends TestCase
         $uri = new RedirectUri('https://cms.example.com/tropikal-connect/oauth/callback');
 
         $this->assertTrue($uri->matches('https://cms.example.com/tropikal-connect/oauth/callback'));
+        $this->assertFalse($uri->matches('https://cms.example.com/tropikal-connect/oauth/callback/'));
         $this->assertFalse($uri->matches('https://cms.example.com/other/callback'));
     }
 

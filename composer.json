@@ -32,6 +32,11 @@
             "TropikalAI\\Connect\\Tests\\": "tests/"
         }
     },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1-dev"
+        }
+    },
     "scripts": {
         "analyse": "phpstan analyse",
         "format": "pint",

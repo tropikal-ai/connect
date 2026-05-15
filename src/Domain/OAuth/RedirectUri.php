@@ -15,6 +15,6 @@ final readonly class RedirectUri
 
     public function matches(string $candidate): bool
     {
-        return hash_equals(rtrim($this->value, '/'), rtrim($candidate, '/'));
+        return hash_equals($this->value, $candidate);
     }
 }

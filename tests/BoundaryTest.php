@@ -12,7 +12,21 @@ final class BoundaryTest extends TestCase
     {
         $root = dirname(__DIR__).'/src';
         $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root));
-        $forbidden = ['Illuminate\\', 'Filament\\', 'Laravel\\', 'WordPress', 'Shopify', 'Guzzle', 'PDO', 'Redis'];
+        $forbidden = [
+            'Illuminate\\',
+            'Filament\\',
+            'Laravel\\',
+            'WordPress',
+            'Shopify',
+            'Guzzle',
+            'PDO',
+            'Redis',
+            'Controller',
+            'Route::',
+            'Schema::',
+            'DB::',
+            'curl_',
+        ];
 
         foreach ($files as $file) {
             if (! $file->isFile() || $file->getExtension() !== 'php') {

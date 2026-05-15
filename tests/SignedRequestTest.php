@@ -53,4 +53,27 @@ final class SignedRequestTest extends TestCase
         $this->expectException(ConnectException::class);
         (new SignedRequestVerifier(new InMemoryNonceStore, 300))->verify('secret', 'install_123', 'POST', '/api/posts', [], '', $headers, 1000);
     }
+
+    public function test_signed_request_rejects_missing_required_headers(): void
+    {
+        $headers = SignedRequest::headers('secret', 'install_123', 'POST', '/api/posts', '', '{"title":"A"}', 1000, 'nonce_1');
+
+        foreach ([
+            SignedRequest::INSTALLATION_HEADER,
+            SignedRequest::TIMESTAMP_HEADER,
+            SignedRequest::NONCE_HEADER,
+            SignedRequest::BODY_HASH_HEADER,
+            SignedRequest::SIGNATURE_HEADER,
+        ] as $header) {
+            $tampered = $headers;
+            unset($tampered[$header]);
+
+            try {
+                (new SignedRequestVerifier(new InMemoryNonceStore, 300))->verify('secret', 'install_123', 'POST', '/api/posts', '', '{"title":"A"}', $tampered, 1000);
+                $this->fail("Signed request without {$header} was accepted.");
+            } catch (ConnectException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
 }

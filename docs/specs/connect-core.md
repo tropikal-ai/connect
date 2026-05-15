@@ -1,6 +1,6 @@
 # Connect Core Spec
 
-Status: draft
+Status: release candidate
 
 ## Problem
 
@@ -17,12 +17,13 @@ Platform packages need one small, reviewed implementation of the connection prot
 
 - No Laravel, Filament, WordPress, Shopify, database, route, controller, or UI integration.
 - No production endpoints or private server behavior.
-- No hand-entered credential setup.
+- No token-paste credential setup.
 
 ## Domain Concepts
 
 - PKCE pair: verifier and S256 challenge.
 - OAuth state: one-time browser transaction state stored by hash with expiry.
+- Redirect URI: exact callback URL expected by the setup flow.
 - Signed request: canonical method, path, normalized query, timestamp, nonce, body hash, and installation id.
 - Resource schema: explicit fields, grants, and named actions.
 - Capability schema: source-neutral business operations derived from explicit resource grants.
@@ -34,7 +35,7 @@ The package exposes immutable value objects, request builders, a signed request 
 
 ## Security Model
 
-PKCE uses S256 only. OAuth state is compared by hash. Request signatures cover query strings. Nonce replay protection is delegated to an atomic `NonceStore`. Public payloads fail closed when secret-shaped keys appear.
+PKCE uses S256 only. OAuth state is compared by hash. Redirect URI comparison is exact. Request signatures cover query strings. Nonce replay protection is delegated to an atomic `NonceStore`. Public payloads fail closed when secret-shaped keys appear.
 
 ## Infrastructure Boundaries
 
