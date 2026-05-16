@@ -26,7 +26,7 @@ For clone-based development, add a path repository to the application that consu
             "options": {
                 "symlink": true,
                 "versions": {
-                    "tropikal-ai/connect": "0.1.x-dev"
+                    "tropikal-ai/connect": "0.1.0"
                 }
             }
         }
