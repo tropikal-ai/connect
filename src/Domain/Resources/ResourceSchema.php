@@ -46,7 +46,7 @@ final readonly class ResourceSchema
             $schema[$slug] = [
                 'label' => $resource['label'] ?? $slug,
                 'identifier' => $this->identifier($resource),
-                'fields' => $resource['fields'] ?? [],
+                'fields' => $this->readableFieldDefinitions($resource),
                 'permissions' => $resourcePermissions,
                 'actions' => $actions,
             ];
@@ -60,7 +60,7 @@ final readonly class ResourceSchema
         $resource = $this->resource($slug);
         $fields = array_values(array_unique([
             $this->identifier($resource),
-            ...array_keys($resource['fields'] ?? []),
+            ...array_keys($this->readableFieldDefinitions($resource)),
         ]));
 
         return array_intersect_key($record, array_flip($fields));
@@ -101,6 +101,14 @@ final readonly class ResourceSchema
         $identifier = $resource['identifier'] ?? 'id';
 
         return is_string($identifier) && $identifier !== '' ? $identifier : 'id';
+    }
+
+    private function readableFieldDefinitions(array $resource): array
+    {
+        return array_filter(
+            $resource['fields'] ?? [],
+            fn (mixed $definition): bool => is_array($definition) && ($definition['readable'] ?? true) !== false,
+        );
     }
 
     private function permissionsFor(array $permissions, string $slug): array

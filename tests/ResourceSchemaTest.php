@@ -29,6 +29,7 @@ final class ResourceSchemaTest extends TestCase
                     'title' => ['type' => 'string', 'required' => true],
                     'body' => ['type' => 'text'],
                     'readonly' => ['type' => 'string', 'writable' => false],
+                    'writeonly' => ['type' => 'string', 'readable' => false],
                 ],
                 'actions' => [
                     'publish' => ['label' => 'Publish'],
@@ -38,11 +39,13 @@ final class ResourceSchemaTest extends TestCase
 
         $public = $schema->publicSchema(['posts'], ['posts' => ['read', 'action:publish']]);
         $this->assertArrayHasKey('publish', $public['posts']['actions']);
+        $this->assertArrayNotHasKey('writeonly', $public['posts']['fields']);
         $this->assertSame(['id' => 1, 'title' => 'A', 'body' => 'B', 'readonly' => 'R'], $schema->project('posts', [
             'id' => 1,
             'title' => 'A',
             'body' => 'B',
             'readonly' => 'R',
+            'writeonly' => 'W',
             'secret_note' => 'hidden',
         ]));
         $this->assertSame(['id', 'unknown'], $schema->unknownWriteFields('posts', ['title' => 'A', 'id' => 1, 'unknown' => true]));

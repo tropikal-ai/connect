@@ -20,3 +20,5 @@ Report vulnerabilities privately through the repository security advisory flow o
 - Empty grants expose nothing.
 - Reads and writes are limited to explicitly declared fields.
 - Browser payloads must never contain credentials.
+
+See `docs/security/threat-model.md` for the release-candidate threat model.

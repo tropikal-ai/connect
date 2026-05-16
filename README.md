@@ -70,6 +70,8 @@ For clone-based development, add a path repository to the application that consu
 
 There is no token-paste setup path, no copied-secret setup path, and no browser-visible credential path in this package.
 
+See [`docs/security/threat-model.md`](docs/security/threat-model.md) for the release-candidate threat model.
+
 ## Capability Example
 
 ```php

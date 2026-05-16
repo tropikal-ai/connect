@@ -6,3 +6,4 @@
 - Documented install, local path development, security model, capability schemas, and private server boundaries.
 - Hardened redirect URI validation to exact matching.
 - Expanded signed request and package boundary regression coverage.
+- Added release-candidate threat model documentation.
