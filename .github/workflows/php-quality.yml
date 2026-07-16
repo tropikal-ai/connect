@@ -1,0 +1,88 @@
+# Reusable PHP quality gate for the TROPIKAL Connect family.
+#
+# This workflow is the single source of CI truth for tropikal-ai/connect and
+# every adapter (connect-filament, connect-n2n, connect-wordpress). Callers
+# invoke it via `uses:` with a thin ~20-line workflow and keep their own
+# aggregate "CI green" job as the stable branch-protection check.
+#
+# Third-party actions are pinned to immutable commit SHAs (supply-chain
+# hardening); Dependabot keeps the pins current.
+
+name: PHP quality gate
+
+on:
+  workflow_call:
+    inputs:
+      php-versions:
+        description: JSON array of PHP versions to test against
+        type: string
+        default: '["8.2", "8.3", "8.4"]'
+      extensions:
+        description: PHP extensions to install
+        type: string
+        default: json, mbstring, openssl, sodium
+      coverage:
+        description: Coverage driver (none or xdebug)
+        type: string
+        default: none
+      pre-install:
+        description: Shell command run before composer install (e.g. configure a VCS repository)
+        type: string
+        default: ''
+      style:
+        description: Coding-standard check command
+        type: string
+        default: vendor/bin/pint --test
+      analyse:
+        description: Static-analysis command
+        type: string
+        default: vendor/bin/phpstan analyse --no-progress
+      test:
+        description: Test command
+        type: string
+        default: vendor/bin/phpunit --colors=never
+
+jobs:
+  quality:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ${{ fromJSON(inputs.php-versions) }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ${{ inputs.extensions }}
+          coverage: ${{ inputs.coverage }}
+          tools: composer:v2
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Pre-install hook
+        if: inputs.pre-install != ''
+        run: ${{ inputs.pre-install }}
+
+      - name: Install dependencies (cached)
+        uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # 3.2.1
+
+      - name: Syntax check (php -l)
+        run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 -P4 php -l
+
+      - name: Security audit (composer audit)
+        run: composer audit
+
+      - name: Coding standard
+        run: ${{ inputs.style }}
+
+      - name: Static analysis
+        run: ${{ inputs.analyse }}
+
+      - name: Tests
+        run: ${{ inputs.test }}
