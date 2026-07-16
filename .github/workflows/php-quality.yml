@@ -70,7 +70,7 @@ jobs:
         run: ${{ inputs.pre-install }}
 
       - name: Install dependencies (cached)
-        uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # 3.2.1
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
 
       - name: Syntax check (php -l)
         run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 -P4 php -l
