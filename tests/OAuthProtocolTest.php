@@ -43,6 +43,17 @@ final class OAuthProtocolTest extends TestCase
         $this->assertFalse($uri->matches('https://cms.example.com/other/callback'));
     }
 
+    public function test_redirect_uri_requires_https_except_loopback(): void
+    {
+        // Loopback http is allowed for local development.
+        $this->assertSame('http://127.0.0.1:8899/callback', (new RedirectUri('http://127.0.0.1:8899/callback'))->value);
+        $this->assertSame('http://localhost/callback', (new RedirectUri('http://localhost/callback'))->value);
+
+        // Any other http origin is rejected — no cleartext redirect.
+        $this->expectException(\InvalidArgumentException::class);
+        new RedirectUri('http://cms.example.com/callback');
+    }
+
     public function test_client_registration_payload_is_safe_public_metadata(): void
     {
         $payload = (new ClientRegistrationRequest(

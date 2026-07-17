@@ -46,7 +46,12 @@ final readonly class SignedRequestVerifier
         if (! hash_equals($expected, $signature)) {
             throw new ConnectException('Signed request signature mismatch.');
         }
-        if (! $this->nonces->claim($installationId, $nonce, $this->toleranceSeconds)) {
+        // A timestamp is accepted across the whole ±tolerance window, so a given
+        // request stays valid for up to 2×tolerance of wall-clock. The nonce
+        // must be remembered for at least that long, otherwise a captured
+        // request becomes replayable once its nonce expires but its timestamp is
+        // still in range.
+        if (! $this->nonces->claim($installationId, $nonce, 2 * $this->toleranceSeconds)) {
             throw new ConnectException('Signed request nonce has already been used.');
         }
     }
