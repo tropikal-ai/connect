@@ -76,4 +76,18 @@ final class SignedRequestTest extends TestCase
             }
         }
     }
+
+    public function test_nonce_is_remembered_for_the_full_timestamp_window(): void
+    {
+        // The timestamp is accepted across ±tolerance, so a request stays valid
+        // for 2×tolerance of wall-clock; the nonce must be remembered at least
+        // that long or it becomes replayable in the tail of its window.
+        $tolerance = 300;
+        $store = new Support\RecordingNonceStore;
+        $headers = SignedRequest::headers('secret', 'install_123', 'GET', '/api/posts', null, '', 1000, 'nonce_1');
+
+        (new SignedRequestVerifier($store, $tolerance))->verify('secret', 'install_123', 'GET', '/api/posts', null, '', $headers, 1000);
+
+        $this->assertSame([2 * $tolerance], $store->ttls);
+    }
 }
