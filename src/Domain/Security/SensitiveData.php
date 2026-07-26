@@ -58,11 +58,34 @@ final class SensitiveData
         return $redacted;
     }
 
+    /**
+     * Keys that are public BY DESIGN despite matching a marker.
+     *
+     * Exact matches only — never prefixes or substrings — so widening this list
+     * can only ever admit the one key named, and can never accidentally admit
+     * `access_token`, `refresh_token`, `client_secret` and friends.
+     *
+     * `resume_token` matches the `token` marker but is a browser-facing
+     * capability: it is minted per reply by the control plane, HMAC-signed with
+     * the installation secret, scoped to a single session, and rotated on every
+     * use. It exists so a visitor can resume their OWN conversation, so the
+     * bridge must relay it. Stripping it here would silently kill session
+     * resume on every bridged site.
+     */
+    private const PUBLIC_KEY_ALLOW_LIST = [
+        'resource_key',
+        'resume_token',
+    ];
+
     public static function isSensitiveKey(string $key): bool
     {
         $normalized = strtolower($key);
+        if (in_array($normalized, self::PUBLIC_KEY_ALLOW_LIST, true)) {
+            return false;
+        }
+
         if ($normalized === 'key' || str_ends_with($normalized, '_key')) {
-            return ! in_array($normalized, ['resource_key'], true);
+            return true;
         }
 
         foreach (self::KEY_MARKERS as $marker) {
