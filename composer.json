@@ -1,11 +1,13 @@
 {
     "name": "tropikal-ai/connect",
-    "description": "Framework-agnostic TROPIKAL Connect protocol primitives.",
+    "description": "Framework-agnostic TROPIKAL Connect protocol and public-channel application core.",
     "keywords": [
         "oauth",
         "pkce",
         "signed-requests",
-        "resources"
+        "resources",
+        "chat",
+        "booking"
     ],
     "type": "library",
     "license": "MIT",
@@ -38,7 +40,7 @@
         }
     },
     "scripts": {
-        "analyse": "phpstan analyse",
+        "analyse": "phpstan analyse --memory-limit=512M",
         "format": "pint",
         "test": "phpunit --colors=never"
     },
