@@ -1,8 +1,13 @@
 # TROPIKAL Connect
 
-Framework-agnostic protocol primitives for platform packages that implement TROPIKAL Connect.
+Framework-agnostic protocol and public-channel application core for packages
+that implement TROPIKAL Connect.
 
-`tropikal-ai/connect` contains OAuth PKCE helpers, signed request creation and verification, resource and capability schema rules, and browser payload safety checks. It has no Laravel, Filament, WordPress, Shopify, database, route, controller, view, storage, HTTP client, or private server implementation.
+`tropikal-ai/connect` contains OAuth PKCE helpers, signed request creation and
+verification, resource and capability schema rules, browser payload safety
+checks, and the shared Website Chat/Booking application service. It has no
+Laravel, Filament, WordPress, n2n, database, controller, view, or host storage
+implementation.
 
 ## Requirements
 
@@ -52,6 +57,10 @@ For clone-based development, add a path repository to the application that consu
 - Explicit read projection and write validation.
 - Named action grant validation.
 - Recursive browser/public payload safety checks.
+- Same-origin Chat and Booking application use cases and ports.
+- Live Job-contract preflight for availability and booking payloads.
+- Signed control-plane gateway and centralized human-verification adapter.
+- Versioned public-channel JavaScript and CSS.
 
 ## Security Model
 
@@ -106,7 +115,9 @@ $unknownFields = $schema->unknownWriteFields([
 
 ## Private Server Boundary
 
-Server and control-plane internals are intentionally absent. Platform packages provide storage, encrypted persistence, HTTP clients, admin UI, and production endpoint configuration.
+Server and provider internals are intentionally absent. Host adapters provide
+storage, encrypted persistence, HTTP transport, rate limiting, admin UI, route
+registration, logging, and presentation placement.
 
 Use `example.com` hosts in public documentation and tests.
 

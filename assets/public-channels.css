@@ -1,0 +1,139 @@
+.tk-booking-card {
+  --tk-booking-bg: #0a0d0b;
+  --tk-booking-text: #f8faf9;
+  --tk-booking-muted: #a7b0aa;
+  --tk-booking-line: rgba(255, 255, 255, 0.14);
+  --tk-booking-accent: #48d59b;
+  box-sizing: border-box;
+  width: min(100%, 44rem);
+  margin: 2rem auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  color: var(--tk-booking-text);
+  background: var(--tk-booking-bg);
+  border: 1px solid var(--tk-booking-line);
+  border-radius: 1.5rem;
+  font: 500 1rem/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.tk-booking-card *,
+.tk-booking-card *::before,
+.tk-booking-card *::after {
+  box-sizing: border-box;
+}
+
+.tk-booking-card h2 {
+  margin: .25rem 0 .75rem;
+  color: inherit;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  line-height: 1.05;
+}
+
+.tk-booking-card p {
+  margin: .5rem 0 1rem;
+  color: var(--tk-booking-muted);
+}
+
+.tk-booking-eyebrow {
+  color: var(--tk-booking-accent);
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.tk-booking-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: .75rem;
+  margin-top: 1.25rem;
+}
+
+.tk-booking-slot,
+.tk-booking-primary,
+.tk-booking-secondary {
+  min-height: 3rem;
+  padding: .75rem 1rem;
+  border-radius: .85rem;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.tk-booking-slot,
+.tk-booking-secondary {
+  color: var(--tk-booking-text);
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid var(--tk-booking-line);
+}
+
+.tk-booking-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #052016;
+  background: var(--tk-booking-accent);
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.tk-booking-slot:hover,
+.tk-booking-slot:focus-visible,
+.tk-booking-secondary:hover,
+.tk-booking-secondary:focus-visible {
+  background: rgba(255, 255, 255, .12);
+  outline: 2px solid var(--tk-booking-accent);
+  outline-offset: 2px;
+}
+
+.tk-booking-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.tk-booking-form label {
+  display: grid;
+  gap: .4rem;
+  color: var(--tk-booking-text);
+  font-weight: 700;
+}
+
+.tk-booking-form input,
+.tk-booking-form textarea {
+  width: 100%;
+  padding: .8rem .9rem;
+  color: var(--tk-booking-text);
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid var(--tk-booking-line);
+  border-radius: .75rem;
+  font: inherit;
+}
+
+.tk-booking-form input:focus,
+.tk-booking-form textarea:focus {
+  border-color: var(--tk-booking-accent);
+  outline: 2px solid color-mix(in srgb, var(--tk-booking-accent), transparent 55%);
+}
+
+.tk-booking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.tk-booking-message {
+  min-height: 1.5rem;
+}
+
+.tk-booking-success {
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-booking-card *,
+  .tk-booking-card *::before,
+  .tk-booking-card *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
