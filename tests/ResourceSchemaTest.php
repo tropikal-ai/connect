@@ -53,6 +53,129 @@ final class ResourceSchemaTest extends TestCase
         $this->assertFalse($schema->allows(['posts' => ['read']], 'posts', 'action:publish'));
     }
 
+    public function test_field_grants_narrow_the_projection_but_never_drop_the_identifier(): void
+    {
+        $schema = $this->postsSchema();
+        $permissions = ['posts' => ['read', 'field:title']];
+
+        $this->assertSame(['id' => 1, 'title' => 'A'], $schema->project('posts', [
+            'id' => 1,
+            'title' => 'A',
+            'body' => 'B',
+            'readonly' => 'R',
+        ], $permissions));
+    }
+
+    /**
+     * An empty selection must still identify the record it describes.
+     */
+    public function test_identifier_travels_even_when_no_field_is_selected(): void
+    {
+        $schema = $this->postsSchema();
+
+        $this->assertSame(['id' => 1], $schema->project('posts', [
+            'id' => 1,
+            'title' => 'A',
+            'body' => 'B',
+        ], ['posts' => ['read', 'field:nothing_matches_this']]));
+    }
+
+    /**
+     * The dangerous ambiguity: "the owner unticked everything" and "this
+     * installation predates field selection" would otherwise both read as zero
+     * `field:*` entries — and the safe reading of one is the unsafe reading of
+     * the other. Unticking everything must fail closed, not fall back to all.
+     */
+    public function test_unticking_every_field_hands_over_only_the_identifier(): void
+    {
+        $schema = $this->postsSchema();
+        $record = ['id' => 1, 'title' => 'A', 'body' => 'B'];
+
+        $this->assertSame(['id' => 1], $schema->project('posts', $record, [
+            'posts' => ['read', 'fields:selected'],
+        ]));
+        $this->assertSame([], $schema->selectedFields(['posts' => ['read', 'fields:selected']], 'posts'));
+
+        // Without the marker the same permissions mean "never chose", which is
+        // the pre-existing installation, and every readable field still travels.
+        $this->assertSame(
+            ['id' => 1, 'title' => 'A', 'body' => 'B'],
+            $schema->project('posts', $record, ['posts' => ['read']]),
+        );
+    }
+
+    /**
+     * Every installation stored before field selection existed has no `field:*`
+     * entry at all. That must keep meaning "all readable fields", not "none".
+     */
+    public function test_absent_field_grants_project_every_readable_field(): void
+    {
+        $schema = $this->postsSchema();
+        $record = ['id' => 1, 'title' => 'A', 'body' => 'B', 'readonly' => 'R', 'writeonly' => 'W'];
+
+        $this->assertSame(
+            $schema->project('posts', $record),
+            $schema->project('posts', $record, ['posts' => ['read', 'create']]),
+        );
+        $this->assertSame(['id' => 1, 'title' => 'A', 'body' => 'B', 'readonly' => 'R'], $schema->project('posts', $record));
+    }
+
+    /**
+     * A `field:` grant can only ever narrow: naming an unreadable field does not
+     * make it readable, and naming an undeclared one adds nothing.
+     */
+    public function test_field_grants_cannot_widen_beyond_readable_fields(): void
+    {
+        $schema = $this->postsSchema();
+
+        $this->assertSame(['id' => 1, 'title' => 'A'], $schema->project('posts', [
+            'id' => 1,
+            'title' => 'A',
+            'writeonly' => 'W',
+            'secret_note' => 'hidden',
+        ], ['posts' => ['read', 'field:title', 'field:writeonly', 'field:not_a_column']]));
+    }
+
+    public function test_field_grants_of_one_resource_do_not_narrow_another(): void
+    {
+        $schema = $this->postsSchema();
+
+        $this->assertSame(['id' => 1, 'title' => 'A', 'body' => 'B', 'readonly' => 'R'], $schema->project('posts', [
+            'id' => 1,
+            'title' => 'A',
+            'body' => 'B',
+            'readonly' => 'R',
+        ], ['pages' => ['field:title']]));
+    }
+
+    public function test_selected_fields_reports_null_when_nothing_is_declared(): void
+    {
+        $schema = $this->postsSchema();
+
+        $this->assertNull($schema->selectedFields(['posts' => ['read']], 'posts'));
+        $this->assertNull($schema->selectedFields([], 'posts'));
+        $this->assertSame(['title', 'body'], $schema->selectedFields(
+            ['posts' => ['read', 'field:title', 'field:body', 'field:title']],
+            'posts',
+        ));
+    }
+
+    private function postsSchema(): ResourceSchema
+    {
+        return new ResourceSchema([
+            'posts' => [
+                'label' => 'Posts',
+                'identifier' => 'id',
+                'fields' => [
+                    'title' => ['type' => 'string', 'required' => true],
+                    'body' => ['type' => 'text'],
+                    'readonly' => ['type' => 'string', 'writable' => false],
+                    'writeonly' => ['type' => 'string', 'readable' => false],
+                ],
+            ],
+        ]);
+    }
+
     public function test_secret_shaped_resource_fields_are_rejected(): void
     {
         $this->expectException(\InvalidArgumentException::class);
