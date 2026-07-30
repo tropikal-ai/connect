@@ -8,6 +8,19 @@ use TropikalAI\Connect\Domain\Security\SensitiveData;
 
 final readonly class ResourceSchema
 {
+    /** Grant prefix that narrows which readable fields a projection hands over. */
+    public const FIELD_GRANT_PREFIX = 'field:';
+
+    /**
+     * Marks that a field selection was made at all.
+     *
+     * Without it, "the owner unticked everything" and "this installation
+     * predates field selection" both look like zero `field:*` entries, and the
+     * safe reading of one is the unsafe reading of the other. The marker makes
+     * an empty selection say so, so it can fail closed.
+     */
+    public const FIELD_SELECTION_MARKER = 'fields:selected';
+
     public function __construct(private array $resources = [])
     {
         foreach ($resources as $slug => $resource) {
@@ -55,15 +68,66 @@ final readonly class ResourceSchema
         return $schema;
     }
 
-    public function project(string $slug, array $record): array
+    /**
+     * Narrow a record to what the host is allowed to hand over.
+     *
+     * Readable fields can be narrowed further per installation by `field:<name>`
+     * grants in `$permissions[$slug]`, the same mechanism as `action:{$name}`.
+     * The identifier always travels — nothing downstream could be identified
+     * without it — and an unselected field is dropped HERE, at the source, so a
+     * consumer never has to be trusted to filter on receipt.
+     *
+     * @param  array<string, array<int, string>>  $permissions
+     */
+    public function project(string $slug, array $record, array $permissions = []): array
     {
         $resource = $this->resource($slug);
+        $readable = array_keys($this->readableFieldDefinitions($resource));
+
+        $selected = $this->selectedFields($permissions, $slug);
+        if ($selected !== null) {
+            $readable = array_values(array_intersect($readable, $selected));
+        }
+
         $fields = array_values(array_unique([
             $this->identifier($resource),
-            ...array_keys($this->readableFieldDefinitions($resource)),
+            ...$readable,
         ]));
 
         return array_intersect_key($record, array_flip($fields));
+    }
+
+    /**
+     * The `field:<name>` selection declared for a resource, or null when none is.
+     *
+     * Null is not "select nothing" but "no selection was ever declared", which is
+     * what every installation stored before field selection existed — those keep
+     * receiving every readable field.
+     *
+     * @param  array<string, array<int, string>>  $permissions
+     * @return array<int, string>|null
+     */
+    public function selectedFields(array $permissions, string $slug): ?array
+    {
+        $selected = [];
+        $declared = false;
+
+        foreach ($this->permissionsFor($permissions, $slug) as $grant) {
+            if (! is_string($grant)) {
+                continue;
+            }
+            if ($grant === self::FIELD_SELECTION_MARKER) {
+                $declared = true;
+
+                continue;
+            }
+            if (str_starts_with($grant, self::FIELD_GRANT_PREFIX)) {
+                $declared = true;
+                $selected[] = substr($grant, strlen(self::FIELD_GRANT_PREFIX));
+            }
+        }
+
+        return $declared ? array_values(array_unique($selected)) : null;
     }
 
     public function unknownWriteFields(string $slug, array $payload): array
