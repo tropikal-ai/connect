@@ -27,6 +27,34 @@ final class SignedRequestTest extends TestCase
         $verifier->verify('secret', 'install_123', 'GET', '/api/posts', 'a=1&b=2', '', $headers, 1000);
     }
 
+    public function test_signed_request_can_bind_the_visitor_origin_to_the_signature(): void
+    {
+        $headers = SignedRequest::headersWithRequestOrigin(
+            'secret',
+            'install_123',
+            'GET',
+            '/api/connect-filament/embed/info',
+            'https://cms.example.com',
+            'b=2&a=1',
+            '',
+            1000,
+            'nonce_1',
+        );
+
+        $canonical = SignedRequest::canonical(
+            'install_123',
+            'GET',
+            '/api/connect-filament/embed/info',
+            'b=2&a=1',
+            1000,
+            'nonce_1',
+            SignedRequest::bodyHash(''),
+        )."\nhttps://cms.example.com";
+
+        $this->assertSame('https://cms.example.com', $headers[SignedRequest::REQUEST_ORIGIN_HEADER]);
+        $this->assertSame(hash_hmac('sha256', $canonical, 'secret'), $headers[SignedRequest::SIGNATURE_HEADER]);
+    }
+
     public function test_signed_request_rejects_tampering(): void
     {
         $headers = SignedRequest::headers('secret', 'install_123', 'POST', '/api/posts', ['filter' => ['status' => 'draft']], '{"title":"A"}', 1000, 'nonce_1');
