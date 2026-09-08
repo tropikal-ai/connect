@@ -3,3 +3,4 @@
 /.phpunit.cache/
 /.phpunit.result.cache
 /.phpstan.cache/
+/scripts/__pycache__/
