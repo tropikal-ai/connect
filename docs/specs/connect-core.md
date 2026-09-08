@@ -41,6 +41,32 @@ PKCE uses S256 only. OAuth state is compared by hash. Redirect URI comparison is
 
 Framework packages provide storage, HTTP clients, encrypted persistence, caches, and admin UI.
 
+## Optional authenticated request context
+
+`SignedRequestContext` authenticates an opaque non-empty payload of at most 4096
+bytes without changing the original request body or main signature. This permits
+an older receiver to continue validating the unchanged request. A receiver must
+first verify the main signature, timestamp, origin when applicable, and nonce;
+the extension alone is not a request verifier.
+
+`X-Tropikal-Connect-Context` contains canonical unpadded base64url of the payload.
+`X-Tropikal-Connect-Context-Signature` is lowercase hex HMAC-SHA256, using the
+same trimmed signing secret, of `connect-context.v1`, the exact main signature,
+and encoded context joined with two LF bytes. Verification accepts HTTP header
+names case-insensitively. Both absent means no extension; partial, malformed,
+oversized, noncanonical, or invalid proof is an error, never a downgrade.
+
+The payload schema, sensitivity, authorization, and whether absence is permitted
+belong to the consuming protocol. Consumers must redact both headers and must
+not place private extensions in public/browser/cache responses. An authenticated
+extension cannot grant authority by itself; each bounded context still enforces
+its own ownership and capability checks. Removal of both headers must not grant
+access to a resource that requires extension-derived authority.
+
+Cross-language vector: secret `fixture-secret`, main signature 64 lowercase `a`
+characters, payload `{"v":1}` gives context `eyJ2IjoxfQ` and proof
+`9d86dde167a763b2f2e4d3a115c8dcdbbf77713882d599409ed6112d5c3012b4`.
+
 ## Test Plan
 
 Unit tests cover OAuth helpers, token payloads, request signing, replay rejection, capability descriptors, resource projection, write validation, named action grants, payload safety, and framework-free boundaries.
