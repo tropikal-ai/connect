@@ -109,8 +109,8 @@ def resolve(environment, control, repository):
     event = environment.get("GITHUB_EVENT_NAME")
     ref = environment.get("GITHUB_REF")
     allowed_refs = {"refs/heads/main", "refs/heads/maintenance/filament-3"}
-    if not (event == "pull_request" and environment.get("GITHUB_BASE_REF") in {"main", "maintenance/filament-3"}
-            or event == "push" and ref in allowed_refs
+    if not (event == "pull_request" and bool(environment.get("GITHUB_BASE_REF"))
+            or event == "push" and (ref in allowed_refs or isinstance(ref, str) and ref.startswith("refs/heads/feat/"))
             or event == "workflow_dispatch" and ref == "refs/heads/main"):
         raise ValueError("Unsupported release-intent event or control ref")
     head = git(control, "rev-parse", "HEAD")

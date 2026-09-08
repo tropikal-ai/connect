@@ -59,6 +59,8 @@ branch references fail closed.
 
 Owner CI checks out its event into `control`, calls `mode: resolve`, and runs the
 canonical PHP matrix on **every** returned `source_sha` using `checkout-ref`.
+Read-only resolution preserves the owner's existing PR and `feat/**` CI paths;
+those events can never pass the separate main-only publication gate.
 An empty intent list may skip only the payload matrix; the owner's normal matrix
 and resolver must still succeed. A populated list requires the payload matrix to
 succeed, not be skipped/cancelled. This makes the protected-main PR approve and

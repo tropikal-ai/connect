@@ -190,6 +190,15 @@ class AdapterExecutionTest(unittest.TestCase):
         self.assertIn('ref: ${{ inputs.checkout-ref || github.sha }}', quality)
         self.assertIn('persist-credentials: false', quality)
 
+    def test_read_only_existing_feature_ci_can_resolve_but_never_publish(self):
+        environment = {**self.environment, "GITHUB_EVENT_NAME": "push", "GITHUB_REF": "refs/heads/feat/existing-ci"}
+        self.assertEqual(execute({**environment, "RELEASE_MODE": "resolve"})["source_sha"], self.source_sha)
+        with self.assertRaises(ValueError):
+            execute(environment)
+        with self.assertRaises(ValueError):
+            execute({**environment, "RELEASE_MODE": "resolve", "GITHUB_REF": "refs/tags/v0.1.15"})
+        self.assertEqual(self.repository.writes, [])
+
 
 if __name__ == "__main__":
     unittest.main()
