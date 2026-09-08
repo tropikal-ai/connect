@@ -34,3 +34,54 @@ and this no-retag policy do not imply GitHub reports `immutable: true`. No new
 downstream workflow is assumed to trigger from the workflow token's tag/release.
 The release script uses the runner's existing ephemeral token only; never run it
 on a workstation with forged Actions environment variables or production secrets.
+
+## Immutable adapter delivery interface
+
+The root composite action is a delivery interface, not a Composer/runtime API.
+Filament callers pin it and the canonical PHP workflow to an exact reviewed Core
+commit. It supports only `tropikal-ai/connect-filament` and its two existing lines.
+Never copy the helper into a consumer or execute a candidate's release script in
+the write job. The action executes its own pinned `github.action_path` tooling.
+
+The owner supplies `.github/release-intents.json` in a protected-main PR:
+
+```json
+{"schema":1,"releases":[{"version":"v0.1.15","line":"filament-3","source_sha":"FULL_SAME_OWNER_MERGED_COMMIT","source_pr":45}]}
+```
+
+The literal example SHA is intentionally invalid. Each actual record requires a
+full lowercase commit SHA, a merged same-owner source PR, and the corresponding
+`filament-3` / `v0.1.*` / `maintenance/filament-3` / `^3.2` or
+`filament-5` / `v0.2.*` / `main` / `^5.0` package. At most one pending release per
+line is supported. Empty records permit initial workflow-only preparation, not
+publication. Duplicate JSON keys, unsupported fields/lines/versions and guessed
+branch references fail closed.
+
+Owner CI checks out its event into `control`, calls `mode: resolve`, and runs the
+canonical PHP matrix on **every** returned `source_sha` using `checkout-ref`.
+An empty intent list may skip only the payload matrix; the owner's normal matrix
+and resolver must still succeed. A populated list requires the payload matrix to
+succeed, not be skipped/cancelled. This makes the protected-main PR approve and
+test the exact maintenance payload; it does **not** protect the maintenance branch.
+
+The owning dispatcher runs only on protected main, resolves one intended version,
+and reruns that exact payload's PHP matrix read-only. Its final, serialized,
+non-cancelling write job checks out event main into `control` and the tested source
+into `source`, with checkout credentials disabled. It calls `mode: publish`, passes
+the actual resolver/quality job results, selected `verified-source-sha`, intended
+`expected-control-sha` and version, and supplies only the runner token as GH_TOKEN.
+It must not run Composer, candidate tests or candidate scripts in that job.
+
+The action rereads the exact clean control intent, verifies source PR/package line
+and both checkout SHAs, rejects dirty/mismatched sources, compares complete workflow
+Git trees, and rechecks current protected main before publishing the exact source.
+Main/control SHA and payload SHA are intentionally distinct. The selected quality
+SHA must equal the approved payload, not merely the main revision. Matching workflow
+bytes are necessary for off-main publication with GITHUB_TOKEN; do not use extra
+credentials when that API policy rejects a release. Existing no-overwrite,
+uncertain-result reconciliation and tag/release readback mechanics are shared with
+Core's unchanged main-only release path.
+
+After an owner workflow or source intent changes, rerun its required CI and the
+same targeted safety review before dispatch. Archive/channel/normal-install proof
+remains mandatory after publication, exactly as for Core itself.

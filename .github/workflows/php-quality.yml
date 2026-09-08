@@ -13,6 +13,10 @@ name: PHP quality gate
 on:
   workflow_call:
     inputs:
+      checkout-ref:
+        description: Exact approved payload SHA; omitted uses the caller event SHA
+        type: string
+        default: ''
       php-versions:
         description: JSON array of PHP versions to test against
         type: string
@@ -53,6 +57,9 @@ jobs:
         php: ${{ fromJSON(inputs.php-versions) }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ inputs.checkout-ref || github.sha }}
+          persist-credentials: false
 
       - name: Set up PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
