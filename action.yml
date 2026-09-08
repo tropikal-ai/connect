@@ -1,0 +1,53 @@
+name: Approved package publication
+description: Resolve or publish exact Filament release payloads approved by protected owner main
+inputs:
+  mode:
+    description: resolve or publish
+    required: true
+  control-directory:
+    description: Exact owning event checkout inside GITHUB_WORKSPACE
+    default: control
+  source-directory:
+    description: Exact approved payload checkout inside GITHUB_WORKSPACE (publish only)
+    default: source
+  version:
+    description: One version present in protected owner release intent; empty resolves all for CI
+    default: ''
+  expected-control-sha:
+    description: Exact protected main dispatch commit (publish only)
+    default: ''
+  resolve-result:
+    description: Result of the independent intent resolution job
+    default: ''
+  quality-result:
+    description: Result of the exact payload PHP matrix
+    default: ''
+  verified-source-sha:
+    description: Source SHA actually selected for the quality matrix
+    default: ''
+outputs:
+  matrix:
+    description: Bounded approved payload matrix
+    value: ${{ steps.policy.outputs.matrix }}
+  has_intents:
+    description: Whether any payloads are approved
+    value: ${{ steps.policy.outputs.has_intents }}
+  source_sha:
+    description: Exact source when selecting one approved version
+    value: ${{ steps.policy.outputs.source_sha }}
+runs:
+  using: composite
+  steps:
+    - id: policy
+      shell: bash
+      env:
+        PINNED_ACTION_PATH: ${{ github.action_path }}
+        RELEASE_MODE: ${{ inputs.mode }}
+        CONTROL_DIRECTORY: ${{ inputs.control-directory }}
+        SOURCE_DIRECTORY: ${{ inputs.source-directory }}
+        RELEASE_VERSION: ${{ inputs.version }}
+        EXPECTED_CONTROL_SHA: ${{ inputs.expected-control-sha }}
+        RESOLVE_RESULT: ${{ inputs.resolve-result }}
+        QUALITY_RESULT: ${{ inputs.quality-result }}
+        VERIFIED_SOURCE_SHA: ${{ inputs.verified-source-sha }}
+      run: python3 -B "$PINNED_ACTION_PATH/scripts/release_adapter.py"

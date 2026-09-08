@@ -34,8 +34,9 @@ def verify_release(release, version, sha):
     return release
 
 
-def publish(repository, version, sha):
-    if repository.main_sha() != sha:
+def publish(repository, version, sha, *, control_sha=None):
+    approved_main = control_sha or sha
+    if repository.main_sha() != approved_main:
         raise ValueError("Protected main advanced; start a newly verified release")
     tag = repository.tag_sha(version)
     release = repository.get_release(version)
@@ -49,7 +50,7 @@ def publish(repository, version, sha):
         repository.create_tag(version, sha)
     # A lost response intentionally raises. A later invocation reconciles the
     # exact tag/release, never deleting or repeating an uncertain write blindly.
-    if repository.tag_sha(version) != sha or repository.main_sha() != sha:
+    if repository.tag_sha(version) != sha or repository.main_sha() != approved_main:
         raise ValueError("Source changed before release publication; preserve the tag for reconciliation")
     repository.create_release(version, sha)
     if repository.tag_sha(version) != sha:
@@ -58,8 +59,13 @@ def publish(repository, version, sha):
 
 
 class GitHubRepository:
+    def __init__(self, repository=REPOSITORY):
+        if repository not in {REPOSITORY, "tropikal-ai/connect-filament"}:
+            raise ValueError("Unsupported package owner")
+        self.repository = repository
+
     def request(self, path, *, fields=None, allow_missing=False):
-        command = ["gh", "api", "--hostname", "github.com", f"repos/{REPOSITORY}/{path}"]
+        command = ["gh", "api", "--hostname", "github.com", f"repos/{self.repository}/{path}"]
         if fields is not None:
             command.extend(["--method", "POST", "--input", "-"])
         result = subprocess.run(command, input=json.dumps(fields) if fields is not None else None,

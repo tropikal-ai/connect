@@ -10,7 +10,7 @@ composer install
 vendor/bin/pint --test
 vendor/bin/phpstan analyse
 vendor/bin/phpunit --colors=never
-python3 -B -m unittest discover -s scripts -p 'test_release_package.py' -v
+python3 -B -m unittest discover -s scripts -p 'test_release*.py' -v
 ```
 
 ## Rules
